@@ -1,0 +1,56 @@
+---
+# tasks file for roles/containerd_conf
+- name: Ensure overlay and br_netfilter modules are loaded
+  lineinfile:
+    path: /etc/modules-load.d/containerd.conf
+    line: "{{ item }}"
+    create: yes
+  with_items:
+    - overlay
+    - br_netfilter
+
+- name: Load overlay and br_netfilter modules
+  command: modprobe "{{ item }}"
+  with_items:
+    - overlay
+    - br_netfilter
+
+- name: Set system configurations for Kubernetes networking
+  copy:
+    dest: /etc/sysctl.d/99-kubernetes-cri.conf
+    content: |
+      net.bridge.bridge-nf-call-iptables = 1
+      net.ipv4.ip_forward = 1
+      net.bridge.bridge-nf-call-ip6tables = 1
+
+- name: Apply new sysctl settings
+  command: sysctl --system
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Ensure /etc/containerd directory exists
+  file:
+    path: /etc/containerd
+    state: directory
+
+- name: Generate default containerd configuration
+  command: containerd config default
+  register: containerd_default_config
+
+- name: Save default containerd configuration
+  copy:
+    dest: /etc/containerd/config.toml
+    content: "{{ containerd_default_config.stdout }}"
+
+- name: Restart containerd service
+  systemd:
+    name: containerd
+    state: restarted
+
+- name: Verify containerd service status
+  systemd:
+    name: containerd
+    state: started
+    enabled: yes

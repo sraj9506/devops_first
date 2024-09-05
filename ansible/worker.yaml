@@ -1,0 +1,9 @@
+---
+- name: Join Worker Nodes to the Cluster
+  hosts: workers
+  become: yes
+  vars_files:
+    - /etc/ansible/vars/kubeadm_join.yml
+  tasks:
+    - name: Execute join command
+      command: "{{ kubeadm_join_command }}"

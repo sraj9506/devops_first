@@ -1,0 +1,8 @@
+---
+- name: Setup Kubernetes Cluster
+  hosts: all
+  become: true
+  roles:
+    - prerequisites
+    - docker
+    - kubernetes

@@ -1,0 +1,36 @@
+---
+# tasks file for roles/kubernetes
+
+- name: Download and convert Kubernetes GPG key
+  shell: curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | gpg --yes --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+- name: Add Kubernetes repository
+  apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /"
+    filename: kubernetes
+    state: present
+    
+- name: Update APT package index
+  apt:
+    update_cache: yes
+
+- name: Install Kubernetes packages
+  apt: 
+    name:
+      - kubelet
+      - kubeadm
+      - kubectl
+    state: latest
+
+- name: Hold Kubernetes packages
+  command: apt-mark hold kubelet kubeadm kubectl
+
+
+- name: Disable swap
+  command: swapoff -a
+
+- name: Remove swap entry from /etc/fstab
+  lineinfile:
+    path: /etc/fstab
+    regexp: "^/swapfile"
+    state: absent
