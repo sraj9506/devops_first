@@ -69,6 +69,25 @@ data "aws_ami" "nat" {
   }
 }
 
+resource "random_string" "rand_key" {
+  length = 5
+  special = false
+}
+
+resource "aws_key_pair" "key_pair" {
+  key_name = "${var.base_name}-Key-${random_string.rand_key.result}"
+  public_key = file("${var.pub_path}")
+}
+
+resource "vault_kv_secret_v2" "private_key" {
+  mount = "secret"
+  name = "${var.key_prefix}/${aws_key_pair.key_pair.key_name}"
+  data_json = jsonencode(
+    {
+      private_key=aws_key_pair.key_pair.private_key
+    }
+  )
+}
 
 resource "aws_instance" "ecommerce_instance" {
   count = length(var.instance_prefix)
@@ -77,11 +96,12 @@ resource "aws_instance" "ecommerce_instance" {
   subnet_id = count.index>4?var.public_subnet_id:var.private_subnet_id
   iam_instance_profile = aws_iam_instance_profile.ec2_profile.name
   vpc_security_group_ids = [
-    count.index<5?var.security_group_ids["private"]:
+    count.index<4?var.security_group_ids["workers"]:
+    count.index==4?var.security_group_ids["master"]:
     count.index==5?var.security_group_ids["nat"]:
-    var.security_group_ids["webserver"]
+    var.security_group_ids["prometheus"]
   ]
-  key_name = "my-key"
+  key_name = aws_key_pair.key_pair.key_name
   tags = {
     Name = "${var.base_name}_${var.instance_prefix[count.index]}_instance"
     App = var.base_name

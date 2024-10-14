@@ -4,16 +4,17 @@ terraform {
       source  = "hashicorp/aws"
       version = "~>4.16"
     }
-    /*http = {
-      source  = "hashicorp/http"
-      version = "3.1.0"
-    }*/
   }
   required_version = ">=1.2.0"
 }
 provider "aws" {
   region = "us-east-2"
 }
+provider "vault" {
+  address = var.vault_address
+  token = var.vault_token
+}
+provider "random" {}
 module "network_module" {
   source = "./modules/network"
   base_name = var.base_name
@@ -30,4 +31,5 @@ module "ec2_instance" {
   public_subnet_id = module.network_module.public_subnet_id
   bucket_arn = module.s3_module.bucket_name
   private_subnet_id = module.network_module.private_subnet_id
+  pub_path = var.pub_path
 }
