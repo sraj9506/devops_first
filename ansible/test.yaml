@@ -1,0 +1,6 @@
+---
+- name: Testing Configurations
+  hosts: localhost
+  become: true
+  roles:
+    - helm
