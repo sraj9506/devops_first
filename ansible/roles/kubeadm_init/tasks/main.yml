@@ -1,37 +1,38 @@
 ---
 - name: Initialize Kubernetes cluster
-  command: kubeadm init --pod-network-cidr=192.168.0.0/16 --kubernetes-version=1.31.0
-  when: "'kubeadm' not in ansible_facts.packages"
+  ansible.builtin.command: kubeadm init --pod-network-cidr=192.168.0.0/16 --kubernetes-version=1.31.0
+  changed_when: false
 
 - name: Create .kube directory in the user's home
-  become: false	
-  file:
+  become: false
+  ansible.builtin.file:
     path: "/home/{{ ansible_user }}/.kube"
     state: directory
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     mode: '0700'
 
-- name: Copy kube config file to user's home directory
-  shell: cp /etc/kubernetes/admin.conf /home/{{ ansible_user }}/.kube/config
-
-- name: Set ownership and permissions for kube config file
-  file:
-    path: "/home/{{ ansible_user }}/.kube/config"
-    state: file
+- name: Copy kube config file to .kube directory
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/{{ ansible_user }}/.kube/config
+    mode: '0600'
+    remote_src: true
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
-    mode: '0600'
-    
+
 - name: Apply Calico network manifest using kubectl
   become: false
-  command: kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
-  
+  ansible.builtin.command: kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
+  changed_when: false
+
 - name: Extract join command
-  command: kubeadm token create --print-join-command
+  ansible.builtin.command: kubeadm token create --print-join-command
   register: kubeadm_join_command
-  
+  changed_when: false
+
 - name: Save join command to file
-  copy:
+  ansible.builtin.copy:
     content: "{{ kubeadm_join_command.stdout }}"
     dest: /etc/ansible/vars/kubeadm_join.yml
+    mode: '0644'

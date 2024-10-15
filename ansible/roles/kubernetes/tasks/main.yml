@@ -1,36 +1,43 @@
 ---
 # tasks file for roles/kubernetes
-
 - name: Download and convert Kubernetes GPG key
-  shell: curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | gpg --yes --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  ansible.builtin.apt_key:
+    url: https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key
+    keyring: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    state: present
 
 - name: Add Kubernetes repository
-  apt_repository:
+  ansible.builtin.apt_repository:
     repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /"
     filename: kubernetes
-    state: present 
-    
+    state: present
+
 - name: Update APT package index
-  apt:
-    update_cache: yes
+  ansible.builtin.apt:
+    update_cache: true
 
 - name: Install Kubernetes packages
-  apt: 
+  ansible.builtin.apt:
     name:
       - kubelet
       - kubeadm
       - kubectl
-    state: latest
+    state: present
+  register: result
 
 - name: Hold Kubernetes packages
-  command: apt-mark hold kubelet kubeadm kubectl
+  ansible.builtin.command: apt-mark hold kubelet kubeadm kubectl
+  changed_when: false
 
 
 - name: Disable swap
-  command: swapoff -a
+  ansible.builtin.systemd:
+    name: swap.target
+    state: stopped
+    enabled: false
 
 - name: Remove swap entry from /etc/fstab
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/fstab
     regexp: "^/swapfile"
     state: absent
