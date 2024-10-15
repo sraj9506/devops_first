@@ -1,4 +1,3 @@
 ---
 dependencies:
   - role: containerd_conf
-
