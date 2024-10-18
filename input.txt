@@ -1,0 +1,391 @@
+frequently delivering apps to consumer we use ci/cd pipelines by using automation tool like jenkins.
+
+continuos integration :
+
+Scenario :
+
+like we have github for version controlling for our code.
+
+so here we have main branch which represents out current working so code.
+
+so while fixing the bug or adding new feature to our application we don't directly apply changes to the main branch instead we create another branch for new version.
+
+then after we build that code like if we make the java application than we build .jar file then we test that jar file if its working properly then we merge/integrate our code to the main branch.
+
+and this process is continuos as bug fixing and adding new feature is a frequent process in software development.
+
+continuos delivery :
+
+now we have code / buid which is completly ready for deployment .
+
+it is done by release application in staging environment where maybe performance and user acceptance testing happens.
+
+it ensures that code is fully validated and ready for the deployment.
+
+continuos deployment :
+
+we release application in production environment.
+
+There is many parameters types :
+
+Boolean
+
+Choice : Drop Down
+
+Credentials
+
+File 
+
+Multi Line String
+
+Password
+
+Run 
+
+String 
+
+----------------------------------------------------------
+
+run is executed when images is created and cmd is executed when container is created.
+
+docker build -t <tagname> <directory of docker file>
+
+RUN apk add --no-cache curl // to not save index file after download
+
+docker run -p 3000:3000 <imageid>
+
+docker exec <container_id> hostname -I
+
+into /etc/docker/daemon.json we can change bridge ip which is resulted into different ip range of created conatiner.
+
+or either we can do this by create custom network and create contaiers into that network.
+
+when we use --rm while creating container then it will automatically remove if we stop the container.
+
+--name is used for giving name to the container.
+
+docker tag is use for change the name of image.
+
+docker tag <old> <new>
+
+docker run -it --rm -v <volumename>:<dir name which is same in which we store data of our application through docker file> <imageid>
+
+docker run is useful for create new container and automatically then after run that container while exec is useful for go inside that running container and fire commands.
+
+realpath command is used for get absolute path of file.
+
+docker run -d --rm -v <directory of local>:<directory of container> <image>
+
+--------------------------------------------------------------------
+
+used for automatic deployment, scaling and managemnt of contaonarized apps.
+
+Architecture :
+
+cluster: (group of nodes)
+
+master & worker
+
+master node has api server and through api it connects to worker and it provide a cli interface (kubectl) to communicate with kubelet or you can say worker nodes.
+
+in each workernode one kubernetes agent is present which is called as kubelet.
+
+a single instance of running process in cluster. it can run one or more conainers.
+
+schduler assign node to newly created pods.
+
+etcd is key value store to having all cluster data.
+
+kubeadm is used for initialize master node components, join nodes to it and provide lifecycle management.
+
+if master node is also handle workload then we can install kubelet on master node.
+
+controll manager is manage the state of cluster like if node failure happpens then we need to change it this is done by it.
+
+Woker:
+
+kubelet: it makes sure that container are running in pods properly.
+
+kube-proxy : maintains the network rules which enables communication between pods.
+
+container-runtime : a tool resposible for running containers .
+
+----
+
+Rollouts and Rollbacks :
+
+
+----
+
+kubectl create deployment <name> --image=<image>
+
+kubectl expose deployment <name of dep> --port=80 --type=LoadBalancer
+
+kubectl port-forward service/<service-name> 8080:80
+
+kubectl set image deployment <name of dep> <name of con>=<name of new img>
+
+kubectl rollout status deployment <name of dep>
+
+kubectl rollout undo deployment <name of dep>
+
+kubectl scale deployment <dep name> --replicas=4
+
+
+-----
+
+static pod is directly managed by kubelet on a specific node without interaction with kubernetes api server.
+
+they are used for system level components (api server,etcd,control manager)
+
+it is not managed by control pane.
+
+----
+
+openssl genrsa -out tls.key 2048
+
+openssl req -new -key tls.key -out tls.csr
+
+openssl x509 -req -in tls.csr -signkey tls.key -out tls.crt
+
+-----
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+  namespace: my-namespace
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-app-container
+        image: my-app-image:latest
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-pod-reader
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-pods
+  namespace: default
+subjects:
+- kind: User
+  name: jane # The username to bind the role to
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+helm create my-web-app
+
+---
+
+kubectl create secret tls my-tls-secret --cert=tls.crt --key=tls.key
+
+---
+
+Linux :
+
+date +%T // time
+
+wildcards :
+
+* is used for indicate rest like if we want to list file that starts with a then we can do like this : ls a*
+
+and it also used for searching extensions while apply before strings : ls *.csv
+
+{} it is used to specify range : touch fie{1..10} // it creates 10 files likw file1, file2 .. file10.
+
+---------------------------------------------------------------------------------
+
+Linux Boot Process :
+
+POST - Power On Self Test :
+
+-   checks that all component is fine.
+
+BIOS - Basic Input Output System :
+
+-   inbuilt chip in motherboard which has the program for initialize hardwares 
+
+-   post is performed by bios.
+
+-   it is a read only and non-volatile memory (data persistency even there is no power)
+
+-   CMOS - Complementary Metal Oxide Semiconductor : 
+
+    -   Because BIOS is read only memory there is a copy of BIOS is stored in CMOS which is writable so we can change the setting 
+        and for maintain these settings(date, time, boot sequence,etc.) there is CMOS battery.
+
+    -   it is a volatile memory (needs cmos battery as a power source for data persistency)
+
+    -   reason to do this double layer is it's risky to re-flash a ic (BIOS).
+
+MBR - Master Boot Record :
+
+-   after post bios checks for MBR
+
+-   it is a special type of boot sector which is at beggining of primary hard drive.
+
+-   it knows how many partitions are there in the disk and where is different os in hard disk to boot up.
+
+-   Following is classification of components which resides in MBR :
+
+    -   Partition Table (64 bytes)
+
+    -   Nulls (2 bytes)
+
+    -   Disk Signtaure (4 bytes)
+
+    -   MBR Singnature (2 bytes)
+
+    -   Boot Loader (440 bytes)
+
+GRUB - Grand Unified Boot Loader :
+
+-   When MBR is founded then bios gives control to MBR.
+
+-   Now MBR finds GRUB in the hard disk.
+
+-   It is a bootloader of linux for x86 architecture cpus where as there are different versions of LILO (Linux Loader) which is 
+    used for different cpu architectures.(eg. Intel Itanium - ELILO)
+
+-   Latest version of GRUB is GRUB2.
+
+-   Firstly it loads /boot/grub2/grub.cfg at a boot time which is asking for selecting the kernel.
+
+-   Once we select the kernel it searches for kernel binary eg . /boot/vmlinuz-<kernel-version>
+
+-   Mainly GRUB Loads the linux kernel  and the initrd (eariler than rhel 7) or initramfs image into memory from /boot partition.
+
+-   Chicken Egg Problem :
+
+    -   The linux kernel needs drivers to access hardware devices for mounting root file system
+
+    -   The initramfs contains the necessary drivers and scripts to prepare the system but must be loaded into memory first by the
+        kernel.
+
+    -   This created dependency cycle.
+
+-   The solution is bundle essential driver directly into the initramfs.
+
+-   So firstly GRUB loads both kernel and initramfs into memory and when kernel is loaded in ram it handover control to the kernel.
+
+-   kernel mounts initramfs as a temporary file system.
+
+-   iniramfs install necessary driver for accessing hardware devices.
+
+-   Now actual root file system is accessible, the system switches from initramfs to actual file system.
+
+Init - Initialization :
+
+-   It is the first process that linux kernel starts after mounting root file system.
+
+-   This process is assigned with PID of 1 and it is the ancestor of all other processes in the system.
+
+-   There is a different implementation of init process but modern and widely used implementation is init/systemd.
+
+-   It is a daemon which means is always running in background.
+
+-   It starts all required processes which is found in /etc/systemd/system/default.target.
+
+-   This init process is responsible for starting, stopping and managing system services specially in systemd implementation.
+
+-   Depending on the init process implementation it manages various system state which is known as runlevels or targets (systemd).
+
+-   There are total 7 run levels we can find these run levels in /usr/bin/systemd/system. (ls -l runlevel*)
+
+-   these states are like starts the system in graphical mode , multiuser cli mode .
+
+-   systemctl get-default command is used for current run levels.(systemd)
+
+-   systemctl set-default <taget-name> command is used for change run levels.(systemd)
+
+-   Run level Explaination :
+
+    -   INIT 0 -> Shut Down
+
+    -   INIT 1 -> Single User without gui and nfs
+
+    -   INIT 2 -> Multi User without gui and nfs
+
+    -   INIT 3 -> Multi User mode with nfs no gui
+
+    -   INIT 4 -> Research Purpose
+
+    -   INIT 5 -> Multi User mode with gui and nfs
+
+    -   INIT 6 -> Reboot
+
+File Structure :
+
+-   Entire os is stored in '/' directory which is called as root directory.
+
+-   It contains following directories :
+
+    -   bin : binary files for executing commands
+
+    -   etc : system configuration files
+
+    -   sbin : essential system binaries
+
+    -   usr : read only user application 
+
+    -   var : logs
+
+    -   dev : devices related files
+
+    -   home : user home directories
+
+    -   lib : libraries and kernel modules
+
+    -   mnt : temporary mount point
+
+    -   opt : optional applications
+
+    -   proc : process and kernel info files
+
+    -   root : root user home directory
+
+-   (~) indicates home directory.
+
+-   Types Of File System :
+
+    -   ext4(extended 4)(eg.Ubuntu) 
+
+    -   XFS(extends file system)(eg.RHEL) (Recommended for High throughput and extensive parallel processing)
+
+    -   BtrFS(B-tree file system)
+
+    -   FAT(File allocation table)
+
+-   Inode :
+
+    -   An inode in linux is a data structure that stores metadata about file or directory which is stored in table format.
+
+    -   ls -i command is used for getting inode number of file and directory.
+
+    -   inode number is a unique identifier which is mapped with inode .
+
+    -   Scenario of fire ls command.
