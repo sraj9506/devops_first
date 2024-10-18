@@ -32,4 +32,5 @@ module "ec2_instance" {
   bucket_arn = module.s3_module.bucket_name
   private_subnet_id = module.network_module.private_subnet_id
   pub_path = var.pub_path
+  key_prefix = var.key_prefix
 }

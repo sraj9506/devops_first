@@ -16,3 +16,7 @@ variable "pub_path" {
  type = string
   default = "~/.ssh/id_rsa.pub"
 }
+variable "key_prefix" {
+  description = "Prefix of Key"
+  type = string
+}
